@@ -49,7 +49,7 @@ def get_homepage(request):
         for post in feed_posts:
             while not feed_posts.count(post) == 1:
                 feed_posts.remove(post)
-                while True:
+                for _ in range(10):
                     new = random.choice(all_posts)
                     if new not in feed_posts:
                         feed_posts.append(new)
