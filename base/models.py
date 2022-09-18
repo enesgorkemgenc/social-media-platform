@@ -83,13 +83,17 @@ class UserProfile(models.Model):
                         all_interested_posts.append(post)
 
             weights = [all_interested_posts.count(post) for post in all_interested_posts]
-            random_interested_posts = random.choices(all_interested_posts, weights=weights,k=3)
+
+            if len(all_interested_posts) >= 3:
+                random_interested_posts = random.choices(all_interested_posts, weights=weights,k=3)
 
             # randomly selects 3 posts from the list "all_interested_posts" based on their count in the list,
             # e.g if a post includes 2 tags that the user is interested in, then the list is
             # going to be including 2 copies of that post, making the possibility to be chosen twice compared to
             # the posts that has only 1 interested tag.
-            
+        
+        if not new_posts:
+            return []
 
         for _ in range(10): #Try Up To 10 Times. I don't want it to be stuck in an infinite loop.
             random_new_post = random.choice(new_posts)
