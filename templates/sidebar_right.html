@@ -1,0 +1,26 @@
+
+{% if related_users %}
+
+<div class="sidebar-right-container">
+
+    <div class="sidebar-right-head">
+        <p>Users You May Know</p>
+    </div>
+
+    <div class="sidebar-right-body">
+
+        
+
+        {% for r_user in related_users %}
+            <div class="related-user">
+                <a href="{% url 'user-profile-page' r_user.username %}"><img src="https://picsum.photos/seed/{{r_user.id}}/100"> <strong>{{r_user.username}}</strong></a>
+                {% if r_user in request.user.profile.following.all %}
+                    <button id="follow-btn-{{r_user.id}}" class="unfollow follow-btn" onclick="handle_following(`{% url 'handle-following' r_user.username %}`,'{{ r_user.id }}')">Unfollow</button>
+                {% else %}
+                    <button id="follow-btn-{{r_user.id}}" class="follow follow-btn" onclick="handle_following(`{% url 'handle-following' r_user.username %}`,'{{ r_user.id }}')">Follow</button>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

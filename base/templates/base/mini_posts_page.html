@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="miniposts-page-container">
+
+    <div class="page-info">
+        <h2>{{ page }}</h2>
+    </div>
+
+    <div class="minipost-container">
+        {% for post in posts %}
+
+            <div class="minipost">
+                
+                <div class="minipost-header">
+                    <strong>{{post.user.username}}</strong>
+                </div>
+                <a href="{% url 'post-page' post.id %}">
+                <div class="minipost-body">
+                    <img src="//img.youtube.com/vi/{{post.video_link}}/0.jpg">
+                    {% if post.user == request.user %}
+                    <div class="edit-btn"><a href="{% url 'edit-post' post.id %}"><i class="fa-solid fa-pen-to-square"></i></a></div>
+                    {% endif %}
+                </div>
+                </a>
+                <div class="minipost-footer">
+                    {{ post.description|truncatechars:"16" }}
+                </div>
+                
+            </div>
+
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock content %}

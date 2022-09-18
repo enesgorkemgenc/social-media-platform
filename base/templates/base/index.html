@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load base_extras %}
+{% block content %}
+
+
+    <div class="feed-container" id="feed-container">
+
+        {% for post in posts %}
+        
+        <div class="feed-post" id="post-{{ post.id }}">
+            <div class="post-head">
+                <a class="user" href="{% url 'user-profile-page' post.user.username %}">
+                    <img src="https://picsum.photos/seed/{{post.user.id}}/100" alt="User Profile Picture">
+                    <p>{{post.user.username}}</p>
+                </a>
+                
+            </div>
+
+            <div class="post-body">
+                <div class="youtube" data-embed="{{post.video_link}}"></div>
+            </div>
+            
+            <div class="post-footer">
+                <div class="likes-section footer-section">
+                    <i class="p-like-btn-{{post.id}} like-button fa-solid fa-heart {% if request.user in post.liked_users.all %}liked{% endif %} {% if not request.user.is_authenticated %}login-required{% endif %}" onclick='like(`{% url "like-post" post.id %}`,`p` , `{{post.id}}`)'></i>
+                    <p class="p-points-{{post.id}}">{{ post.liked_users.all|subtract_len:post.disliked_users.all  }}</p>
+                    <i class="p-dislike-btn-{{post.id}} dislike-button fa-solid fa-heart-crack {% if request.user in post.disliked_users.all %}disliked{% endif %} {% if not request.user.is_authenticated %}login-required{% endif %}" onclick='dislike(`{% url "dislike-post" post.id %}`,`p`,`{{post.id}}`)'></i>
+                </div>
+                <div class="comments-section footer-section">
+                    <a href="{% url 'post-page' post.id %}#post-comments"><i class="fa-solid fa-comment"></i></a>
+                </div>
+                <div class="share-section footer-section share-btn-{{post.id}}" onclick="share_post(`{{ post.id }}`)">
+                    <p><i class="fa-solid fa-share-nodes"></i></p>
+                </div>
+                <div class="bookmark-section footer-section {% if not request.user.is_authenticated %}login-required{% endif %}" onclick='bookmark_post(`{% url "bookmark-post" post.id %}`,`{{ post.id }}`)'>
+                    
+                    {% if post in request.user.profile.bookmarked_posts.all %}
+                    <i class="bookmark-btn-{{post.id}} fa-solid fa-bookmark"></i>
+                    {% else %}
+                    <i class="bookmark-btn-{{post.id}} fa-regular fa-bookmark"></i>
+                    {% endif %}
+                    
+                </div>
+            </div>
+
+            <div class="post-end">
+
+                <div class="post-info">
+                    {% if post.created_date == post.updated_date %}
+                    <small>{{ post.created_date|timesince }} ago</small>
+                    {% else %}
+                    <small>{{ post.created_date|timesince }} ago (updated)</small>
+                    {% endif %}
+                </div>
+
+                <div class="post-description">
+                    <p>{{ post.description }}</p>
+                </div>
+
+                {% if post.tags %}
+                <div class="post-tags">
+                    {% for tag in post.tags.all %}
+                        <a href="{% url 'posts-page' %}?tag={{tag.name}}" class="post-tag">#{{tag.name}}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if post.best_3_comments.all %}
+                <div class="post-comments">
+                    {% for comment in post.best_3_comments.all %}
+
+                    <div class="comment">
+                        <p><strong>{{ comment.user }}</strong></p>
+                        <p>{{comment.content}}</p>
+                    </div>
+
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    {% endfor %}
+
+    </div>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        function share_post(id){
+            var share_buttons = document.getElementsByClassName(`share-btn-${id}`);
+            var url = `${window.location.origin}/post/${id}` 
+            navigator.clipboard.writeText(url);
+
+
+            for(i=0;i<share_buttons.length;i++){
+                if (!share_buttons[i].className.includes("copied")){
+                    share_buttons[i].className += " copied" ;
+                }
+            }
+    }</script>
+    {% if not request.user.is_authenticated %}
+    <div id="login-alert">
+        <p>You must be logged in to take this action.</p>
+        <a href="{% url 'login-page' %}" class="form-btn" id="login-button">Log In</a>
+        <a href="{% url 'register-page' %}" class="form-btn register" id="register-button">Register</a>
+        <i class="fa-regular fa-rectangle-xmark close-btn" onclick="close_login_div()"></i>
+        <input type="hidden" value="{% url 'login-page' %}?next=/post/" id="login-variable">
+        <input type="hidden" value="{% url 'register-page' %}?next=/post/" id="register-variable">
+    </div>
+    <script>
+
+        function login_required(post_id = 0){
+            var div = document.getElementById("login-alert");
+            
+            if (post_id){
+                var login_button = document.getElementById("login-button");
+                var register_button = document.getElementById("register-button");
+
+                var login_url = document.getElementById("login-variable").getAttribute("value") + post_id;
+                var register_url = document.getElementById("register-variable").getAttribute("value") + post_id;
+                
+                login_button.setAttribute("href", login_url);
+                register_button.setAttribute("href", register_url);
+            }
+
+            div.style.display = "block"
+        }
+
+        function close_login_div(){
+            var div = document.getElementById("login-alert");
+
+            div.style.display = "none"
+        }
+
+        function activate(){
+            //Load YouTube Videos on page...
+            var youTubeVideos = document.querySelectorAll('.youtube');
+            for (var i = 0; i < youTubeVideos.length; i++) {
+                var thumbnail = `//img.youtube.com/vi/${youTubeVideos[i].dataset.embed}/0.jpg`;
+                //set CSS
+                youTubeVideos[i].style.cssText = "max-width: 100%; height:100%;";
+    
+                //set microdata attributes for SEO
+                youTubeVideos[i].setAttribute("itemprop", "video");
+                youTubeVideos[i].setAttribute("itemscope", '');
+                youTubeVideos[i].setAttribute("itemtype", "http://schema.org/VideoObject");
+    
+                //set HTML
+                youTubeVideos[i].innerHTML = '<div class="play"></div>' +
+                    '<meta itemprop="embedURL" content="https://www.youtube.com/embed/' +  youTubeVideos[i].dataset.embed +'" />' +
+                    '<img style="cursor: pointer;" width="100%" height="100%" src="' + thumbnail + '" />';
+    
+                //add click event that will load YouTube video
+                youTubeVideos[i].addEventListener( "click", function() {
+                    this.innerHTML = '<iframe width="100%" height="100%" frameBorder="0" ' +
+                        'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"' +
+                        'src="https://www.youtube.com/embed/' + this.dataset.embed + '?enablejsapi=1&rel=0&showinfo=0&autoplay=1"' +
+                        ' allowFullScreen="allowfullscreen"></iframe>';
+                } );
+        }}
+            document.addEventListener("DOMContentLoaded",activate());
+            var buttons = document.getElementsByClassName("login-required");
+            
+            for(i=0;i<buttons.length;i++){
+                parent_id = buttons[i].closest(".feed-post").getAttribute("id").split("post-")[1]
+                buttons[i].setAttribute("onclick",`login_required(${parent_id})`)
+            }
+            $(window).scroll(function() {
+                if($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
+                    login_required()      
+                }
+            });
+    </script>
+    {% else %}
+    <script>
+
+        function like(url,comment_or_post,button_id){
+            $.ajax({
+            url: url,
+            type: 'get',
+            success: function(){
+                var like_buttons = comment_or_post == "c" ? document.getElementsByClassName(`c-like-btn-${button_id}`) : document.getElementsByClassName(`p-like-btn-${button_id}`);
+                var dislike_buttons = comment_or_post == "c" ? document.getElementsByClassName(`c-dislike-btn-${button_id}`) : document.getElementsByClassName(`p-dislike-btn-${button_id}`);
+                var points = comment_or_post == "c" ? document.getElementsByClassName(`c-points-${button_id}`) : document.getElementsByClassName(`p-points-${button_id}`);
+
+                if (like_buttons[0].className.includes("liked")){
+                    for(i=0;i<like_buttons.length;i++){
+                        like_buttons[i].className = like_buttons[i].className.replace("liked","");
+                        points[i].innerHTML = String(parseInt(points[i].innerHTML) - 1);
+                    }
+                    
+                }
+                else{
+                    for(i=0;i<like_buttons.length;i++){
+                        like_buttons[i].className += "liked";
+                        points[i].innerHTML = String(parseInt(points[i].innerHTML) + 1);
+                    }
+                    
+                }
+                if (dislike_buttons[0].className.includes("disliked")){
+                    for(i=0;i<dislike_buttons.length;i++){
+                        dislike_buttons[i].className = dislike_buttons[i].className.replace("disliked","");
+                        points[i].innerHTML = String(parseInt(points[i].innerHTML) + 1);
+                    }
+                    
+                }
+            }, 
+            failure:{}
+            } 
+            );
+        }
+
+        function dislike(url,comment_or_post,button_id){
+            $.ajax({
+            url: url,
+            type: 'get',
+            success: function(){
+                
+                var like_buttons = comment_or_post == "c" ? document.getElementsByClassName(`c-like-btn-${button_id}`) : document.getElementsByClassName(`p-like-btn-${button_id}`);
+                var dislike_buttons = comment_or_post == "c" ? document.getElementsByClassName(`c-dislike-btn-${button_id}`) : document.getElementsByClassName(`p-dislike-btn-${button_id}`);
+                var points = comment_or_post == "c" ? document.getElementsByClassName(`c-points-${button_id}`) : document.getElementsByClassName(`p-points-${button_id}`);
+
+
+                if (dislike_buttons[0].className.includes("disliked")){
+
+                    for(i=0;i<dislike_buttons.length;i++){
+                        dislike_buttons[i].className = dislike_buttons[i].className.replace("disliked","");
+                        points[i].innerHTML = String(parseInt(points[i].innerHTML) + 1);
+                    }
+                    
+                }
+                else{
+                    for(i=0;i<dislike_buttons.length;i++){
+                        dislike_buttons[i].className += "disliked"
+                        points[i].innerHTML = String(parseInt(points[i].innerHTML) - 1);
+                    }
+                }
+                if (like_buttons[0].className.includes("liked")){
+                    for(i=0;i<like_buttons.length;i++){
+                    like_buttons[i].className = like_buttons[i].className.replace("liked","");
+                    points[i].innerHTML = String(parseInt(points[i].innerHTML) - 1);
+                }}
+            },
+            failure:{}
+            } 
+            );
+        }
+
+        function bookmark_post(url,button_id){
+            $.ajax({
+            url: url,
+            type: 'get',
+            success: function(){
+                var bookmark_buttons = document.getElementsByClassName(`bookmark-btn-${button_id}`);
+                
+                if(bookmark_buttons[0].className.includes("fa-solid")){
+                    for(i=0;i<bookmark_buttons.length;i++){
+                        bookmark_buttons[i].className = bookmark_buttons[i].className.replace("solid", "regular")
+                    }
+                    
+                }
+                else{
+                    for(i=0;i<bookmark_buttons.length;i++){
+                        bookmark_buttons[i].className = bookmark_buttons[i].className.replace("regular", "solid")
+
+                    }
+                }
+                
+            },
+            failure:{}
+            } 
+            );
+        }
+
+    </script>
+    <script type="text/javascript">
+
+        let url = `ws://${window.location.host}/ws/socket-server/`
+
+        const postSocket = new WebSocket(url)
+
+        postSocket.onmessage = function(e){
+            let data = JSON.parse(e.data);
+            let feed = document.getElementById("feed-container");
+
+            for(var i=0; i<data.length; i++){
+                feed.insertAdjacentHTML("beforeend",data[i]);
+            }
+            activate()
+        }
+
+        stop_feed = false;
+
+        function make_false(){
+            stop_feed = false;
+        }
+
+        $(window).scroll(function() {
+            if($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
+                message = []
+                posts = document.getElementsByClassName("feed-post");
+
+                if(stop_feed == false){
+                for(i=0;i<posts.length;i++){
+                    message.push(posts[i].id.split("post-")[1])
+                }
+                postSocket.send(Array(message));
+                stop_feed = true;
+                setTimeout(make_false,5000);  
+                }
+                      
+            }
+        });
+
+        function activate(){
+            //Load YouTube Videos on page...
+            var youTubeVideos = document.querySelectorAll('.youtube');
+            for (var i = 0; i < youTubeVideos.length; i++) {
+                var thumbnail = `//img.youtube.com/vi/${youTubeVideos[i].dataset.embed}/0.jpg`;
+                //set CSS
+                youTubeVideos[i].style.cssText = "max-width: 100%; height:100%;";
+    
+                //set microdata attributes for SEO
+                youTubeVideos[i].setAttribute("itemprop", "video");
+                youTubeVideos[i].setAttribute("itemscope", '');
+                youTubeVideos[i].setAttribute("itemtype", "http://schema.org/VideoObject");
+    
+                //set HTML
+                youTubeVideos[i].innerHTML = '<div class="play"></div>' +
+                    '<meta itemprop="embedURL" content="https://www.youtube.com/embed/' +  youTubeVideos[i].dataset.embed +'" />' +
+                    '<img style="cursor: pointer;" width="100%" height="100%" src="' + thumbnail + '" />';
+    
+                //add click event that will load YouTube video
+                youTubeVideos[i].addEventListener( "click", function() {
+                    this.innerHTML = '<iframe width="100%" height="100%" frameBorder="0" ' +
+                        'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"' +
+                        'src="https://www.youtube.com/embed/' + this.dataset.embed + '?enablejsapi=1&rel=0&showinfo=0&autoplay=1"' +
+                        ' allowFullScreen="allowfullscreen"></iframe>';
+                } );
+        }}
+
+        document.addEventListener("DOMContentLoaded",activate())
+
+    </script>
+    {% endif %}
+    
+
+{% endblock content %}

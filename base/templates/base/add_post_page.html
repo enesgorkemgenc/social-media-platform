@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="page-container-1">
+
+    <div class="post-form-container" id="background-form">
+        <form action="" method="post">  
+            {% csrf_token %}
+
+            <label for="url">Video Url</label>
+            <input type="url" name="url" class="form-input" {% if page == 'Edit Post' %}value="https://www.youtube.com/watch?v={{ post.video_link }}"{% endif %}>
+            <small>e.g https://www.youtube.com/watch?v=jNQXAC9IVRw</small>
+
+            <label for="tags">Post Tags</label>
+            <input type="text" name="tags" class="form-input" value="{% for tag in post.tags.all %}{{tag.name}} {% endfor %}">
+            <small>Seperate the tags with space.</small>
+            <small>science computers news</small>
+
+            <label for="description">Post Description</label>
+            <textarea type="text" name="description" class="form-input">{{post.description}}</textarea>
+
+            <input type="submit" value="{% if page == 'Edit Post' %}Save{% else %}Share{% endif %}" class="form-btn">
+            {% if page == "Edit Post" %}
+            <input type="button" class="form-btn delete-btn" onclick="confirm_delete()" value="Delete Post">
+
+            {% endif %}
+        </form>
+    </div>
+    {% if page == "Edit Post" %}
+    <form class="delete-form hidden" id="delete-form" method="POST">
+        {% csrf_token %}
+
+        <h1>Delete Post</h1>
+        <br>
+        <img src="//img.youtube.com/vi/{{post.video_link}}/0.jpg">
+        <strong>{% for tag in post.tags.all %}#{{tag.name}} {% endfor %}</strong>
+        <small>{{ post.description }}</small>
+
+        <a href="{% url 'delete-post' post.id %}"><button type="button" class="form-btn delete-btn">Delete</button></a>
+        <input type="button" class="form-btn" onclick="cancel_delete()" value="Cancel">
+    </form>
+    {% endif %}
+</div>
+
+<script>
+    function confirm_delete(){
+        var form = document.getElementById("delete-form");
+        var background = document.getElementById("background-form");
+        form.className = form.className.replace("hidden", "");
+        background.style = "opacity: 0.3;";
+    }
+
+    function cancel_delete(){
+        var form = document.getElementById("delete-form");
+        var background = document.getElementById("background-form");
+        form.className += " hidden";
+        background.style = "opacity: 1;";
+    }
+    
+</script>
+
+{% endblock content %}
+
+/*delete_post(`{% url 'delete-post' post.id %}`)*/

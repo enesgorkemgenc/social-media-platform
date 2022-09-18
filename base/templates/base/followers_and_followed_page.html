@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+
+{% if request.user.is_authenticated %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    
+    function handle_following(url,id){
+        $.ajax({
+        url: url,
+        type: 'get',
+        success: function(){
+        var button = document.getElementById(`follow-btn-${id}`);
+
+        if (button.className.includes("unfollow")){
+            button.innerHTML = "Follow";
+            button.className = button.className.replace("unfollow","follow");
+            }
+        else{
+            button.innerHTML = "Unfollow";
+            button.className = button.className.replace("follow","unfollow");
+            }
+        },
+        failure:{}
+        } 
+        );
+    }
+
+    
+</script>
+{% endif %}
+    <div class="related-users-container">
+
+    <div class="page-info-mini">
+        <h2>{{page}}</h2>
+    </div>
+    <div class="related-users-body">
+
+        {% for r_user in users %}
+            <div class="related-user">
+                <a href="{% url 'user-profile-page' r_user.username %}"><img src="https://picsum.photos/seed/{{r_user.id}}/100"> <strong>{{r_user.username}}</strong></a>
+                {% if r_user in request.user.profile.following.all %}
+                    <button id="follow-btn-{{r_user.id}}" class="unfollow follow-btn" onclick="handle_following(`{% url 'handle-following' r_user.username %}`,'{{ r_user.id }}')">Unfollow</button>
+                {% else %}
+                    <button id="follow-btn-{{r_user.id}}" class="follow follow-btn" onclick="handle_following(`{% url 'handle-following' r_user.username %}`,'{{ r_user.id }}')">Follow</button>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        </div>
+    </div>
+
+{% endblock content %}

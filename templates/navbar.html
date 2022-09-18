@@ -1,0 +1,24 @@
+<nav>
+    <input type="checkbox" id="check">
+    <label for="check" class="checkbtn">
+      <i class="fas fa-bars"></i>
+    </label>
+    <a href="{% url 'homepage' %}" class="logo">ViSh</a>
+    <ul>
+        {% if request.user.is_authenticated %}
+        
+            <li><a href="{% url 'create-post' %}"><span><i class="fa-solid fa-plus"></i> Add Post</span></a></li>
+            <li><a href="{% url 'homepage' %}"><span><i class="fa-solid fa-list"></i> Feed</span></a></li>
+            <li><a href="{% url 'posts-page' %}"><i class="fa-solid fa-magnifying-glass"></i> Posts</span></a></li>
+            <li><a href="{% url 'user-profile-page' request.user.username %}"><img src="https://picsum.photos/seed/{{request.user.id}}/100">My Profile</a></li>
+            <li><a href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Log Out</a></li>
+
+        {% else %}
+            <li><a href="{% url 'homepage' %}"><span><i class="fa-solid fa-list"></i> Feed</span></a></li>
+            <li><a href="{% url 'posts-page' %}"><i class="fa-solid fa-magnifying-glass"></i> Posts</span></a></li>
+            <li><a href="{% url 'login-page' %}"><i class="fa-solid fa-right-to-bracket"></i> Log In</a></li>
+            <li><a href="{% url 'register-page' %}"><i class="fa-solid fa-user-plus"></i> Register</a></li>
+
+        {% endif %}
+    </ul>
+</nav>

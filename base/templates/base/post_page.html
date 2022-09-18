@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load base_extras %}
+{% block content %}
+        
+        <div class="feed-post">
+            <div class="post-head">
+                <a class="user" href="{% url 'user-profile-page' post.user.username %}">
+                    <img src="https://picsum.photos/seed/{{post.user.id}}/100" alt="User Profile Picture">
+                    <p>@{{post.user.username}}</p>
+                </a>
+                
+            </div>
+
+            <div class="post-body">
+                <iframe src="https://www.youtube.com/embed/{{ post.video_link}}" title="Lorem Ipsum Dolor Sit Amet!" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>            </div>
+
+            <div class="post-footer">
+                <div class="likes-section footer-section">
+                    <i class="fa-solid fa-heart like-button login-required {% if request.user in post.liked_users.all %} liked {% endif %}" id="p-like-btn-{{ post.id }}" onclick='like(`{% url "like-post" post.id %}`,"p","{{post.id}}")'></i>
+                    <p id="p-points-{{ post.id }}">{{ post.liked_users.all|subtract_len:post.disliked_users.all  }}</p>
+                    <i class="fa-solid fa-heart-crack dislike-button login-required {% if request.user in post.disliked_users.all %} disliked {% endif %}" id="p-dislike-btn-{{ post.id }}" onclick='dislike(`{% url "dislike-post" post.id %}`,`p`,`{{post.id}}`)'></i>
+                </div>
+                <div class="comments-section footer-section">
+                    <a href="#post-comments"><i class="fa-solid fa-comment"></i></a>
+                </div>
+                <div class="share-section footer-section" onclick="share_post('{{post.id}}')" id="share-btn-{{post.id}}">
+                    <p><i class="fa-solid fa-share-nodes"></i></p>
+                </div>
+                <div class="bookmark-section footer-section login-required" onclick='bookmark_post(`{% url "bookmark-post" post.id %}`)'>
+                    
+                    {% if post in request.user.profile.bookmarked_posts.all %}
+                    <i id="bookmark-btn" class="fa-solid fa-bookmark"></i>
+                    {% else %}
+                    <i id="bookmark-btn" class="fa-regular fa-bookmark"></i>
+                    {% endif %}
+        
+                </div>
+            </div>
+
+            <div class="post-end">
+
+                <div class="post-info">
+                    {% if post.created_date == post.updated_date %}
+                    <small>{{ post.created_date|timesince }} ago</small>
+                    {% else %}
+                    <small>{{ post.created_date|timesince }} ago (updated)</small>
+                    {% endif %}
+                </div>
+                <div class="post-description">
+                    <p>{{ post.description }}</p>
+                </div>
+                {% if post.tags %}
+                <div class="post-tags">
+                    {% for tag in post.tags.all %}
+                        <a href="{% url 'posts-page' %}?tag={{tag.name}}" class="post-tag">#{{tag.name}}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+
+        <div class="comment-on-post-container">
+            <form action="" method="post">
+                {% csrf_token %}
+
+                <input type="text" class="comment-input login-required" name="content" placeholder="Comment on this post..."></input>
+                <button type="submit" class="submit-btn login-required"><i class="fa-solid fa-paper-plane"></i></button>
+
+            </form>
+        </div>
+
+
+    {% if comments %}
+        <div class="post-comments-container" id="post-comments">
+            {% for comment in comments %}
+                <div class="post-comment" id="comment-{{comment.id}}">
+                    <a href="{% url 'user-profile-page' comment.user.username %}"><img src="https://picsum.photos/seed/{{comment.user.id}}/100">
+                    <strong>{{ comment.user.username }}</strong>
+                    </a>
+                    <p>{{ comment.content }}</p>
+                    <div class="post-comment-footer">
+                    <div class="likes-section footer-section">
+
+                        <i class="fa-solid fa-heart like-button {% if request.user in comment.liked_users.all %}liked{% endif %}" id="c-like-btn-{{ comment.id }}" onclick='like(`{% url "like-comment" comment.id %}`,"c","{{comment.id}}")'></i>
+                        <p id="c-points-{{ comment.id }}">{{ comment.rating  }}</p>
+                        <i class="fa-solid fa-heart-crack dislike-button {% if request.user in comment.disliked_users.all %}disliked{% endif %}" id="c-dislike-btn-{{ comment.id }}" onclick='dislike(`{% url "dislike-comment" comment.id %}`,"c","{{comment.id}}")'></i>
+        
+                    </div>
+                    {% if request.user == comment.user %}
+                    <div class="delete-section footer-section" onclick="delete_comment(`{% url 'delete-comment' comment.id %}`, '{{comment.id}}')">
+                        <p><i class="fa-solid fa-trash-can"></i></p>
+                    </div>
+                    {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    </div>
+<script>
+    function share_post(id){
+        var share_button = document.getElementById(`share-btn-${id}`);
+        var url = `${window.location.origin}/post/${id}` 
+        navigator.clipboard.writeText(url);
+
+        if (!share_button.className.includes("copied")){
+            share_button.className += " copied" ;
+        }
+    }
+
+</script>
+{% if request.user.is_authenticated %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        
+        function like(url,comment_or_post,button_id){
+            $.ajax({
+            url: url,
+            type: 'get',
+            success: function(){
+                var like_button = comment_or_post == "c" ? document.getElementById(`c-like-btn-${button_id}`) : document.getElementById(`p-like-btn-${button_id}`);
+                var dislike_button = comment_or_post == "c" ? document.getElementById(`c-dislike-btn-${button_id}`) : document.getElementById(`p-dislike-btn-${button_id}`);
+                var points = comment_or_post == "c" ? document.getElementById(`c-points-${button_id}`) : document.getElementById(`p-points-${button_id}`);
+
+                if (like_button.className.includes("liked")){
+                    like_button.className = like_button.className.replace("liked","");
+                    points.innerHTML = String(parseInt(points.innerHTML) - 1);
+                }
+                else{
+                    like_button.className += "liked"
+                    points.innerHTML = String(parseInt(points.innerHTML) + 1);
+                }
+                if (dislike_button.className.includes("disliked")){
+                    dislike_button.className = dislike_button.className.replace("disliked","");
+                    points.innerHTML = String(parseInt(points.innerHTML) + 1);
+                }
+            }, 
+            failure:{}
+            } 
+            );
+        }
+
+        function dislike(url,comment_or_post,button_id){
+            $.ajax({
+            url: url,
+            type: 'get',
+            success: function(){
+                
+                var like_button = comment_or_post == "c" ? document.getElementById(`c-like-btn-${button_id}`) : document.getElementById(`p-like-btn-${button_id}`);
+                var dislike_button = comment_or_post == "c" ? document.getElementById(`c-dislike-btn-${button_id}`) : document.getElementById(`p-dislike-btn-${button_id}`);
+                var points = comment_or_post == "c" ? document.getElementById(`c-points-${button_id}`) : document.getElementById(`p-points-${button_id}`);
+
+
+                if (dislike_button.className.includes("disliked")){
+                    dislike_button.className = dislike_button.className.replace("disliked","");
+                    points.innerHTML = String(parseInt(points.innerHTML) + 1);
+                }
+                else{
+                    dislike_button.className += "disliked"
+                    points.innerHTML = String(parseInt(points.innerHTML) - 1);
+                }
+                if (like_button.className.includes("liked")){
+                    like_button.className = like_button.className.replace("liked","");
+                    points.innerHTML = String(parseInt(points.innerHTML) - 1);
+                }
+            },
+            failure:{}
+            } 
+            );
+        }
+
+        function bookmark_post(url){
+            $.ajax({
+            url: url,
+            type: 'get',
+            success: function(){
+                var bookmark_button = document.getElementById("bookmark-btn");
+                
+                if(bookmark_button.className.includes("fa-solid")){
+                    bookmark_button.className = bookmark_button.className.replace("solid", "regular")
+                }
+                else{
+                    bookmark_button.className = bookmark_button.className.replace("regular", "solid")
+                }
+                
+            },
+            failure:{}
+            } 
+            );
+        }
+
+        function delete_comment(url, id){
+            $.ajax({
+            url: url,
+            type: 'get',
+            success: function(){
+                var comment = document.getElementById(`comment-${id}`);
+                comment.remove();
+            },
+            failure:{}
+            } 
+            );
+        }
+    </script>
+{% else %}
+    <div id="login-alert">
+        <p>You must be logged in to take this action.</p>
+        <a href="{% url 'login-page' %}?next={{ request.path }}" class="form-btn">Log In</a>
+        <a href="{% url 'register-page' %}?next={{ request.path }}" class="form-btn register">Register</a>
+        <i class="fa-regular fa-rectangle-xmark close-btn" onclick="close_login_div()"></i>
+    </div>
+    <script>
+
+        function login_required(){
+            var div = document.getElementById("login-alert");
+
+            div.style.display = "block"
+
+        }
+
+        function close_login_div(){
+            var div = document.getElementById("login-alert");
+
+            div.style.display = "none"
+        }
+        var buttons = document.getElementsByClassName("login-required");
+            
+            for(i=0;i<buttons.length;i++){
+                buttons[i].setAttribute("onclick","login_required()")
+            }
+        
+</script>
+{% endif %}
+{% endblock content %}

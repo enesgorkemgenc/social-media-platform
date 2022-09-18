@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% if request.user.is_authenticated %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    {% if request.user == viewed_user %}
+
+        <script>
+            
+            function handle_following(url,id){
+                $.ajax({
+                url: url,
+                type: 'get',
+                success: function(){
+                var button = document.getElementById(`follow-btn-${id}`);
+
+                if (button.className.includes("unfollow")){
+                    button.innerHTML = "Follow";
+                    button.className = button.className.replace("unfollow","follow");
+                    }
+                else{
+                    button.innerHTML = "Unfollow";
+                    button.className = button.className.replace("follow","unfollow");
+                    }
+                },
+                failure:{}
+                } 
+                );
+            }
+
+            
+        </script>
+
+    {% else %}
+
+        <script>
+            
+            function change_button(){
+                var button = document.getElementById("follow-btn");
+                var followers_count = document.getElementById("followers");
+
+                if (button.className.includes("unfollow")){
+                    button.innerHTML = "Follow";
+                    button.className = button.className.replace("unfollow","follow");
+                    followers_count.innerHTML = parseInt(followers_count.innerHTML) - 1;
+                    }
+                else{
+                    button.innerHTML = "Unfollow";
+                    button.className = button.className.replace("follow","unfollow");
+                    followers_count.innerHTML = parseInt(followers_count.innerHTML) + 1;
+                    }
+                }
+
+
+            function handle_following(){
+                $.ajax({
+                url: '{% url "handle-following" viewed_user.username %}',
+                type: 'get',
+                success: change_button(),
+                failure:{}
+                } 
+                );
+            }
+
+            
+        </script>
+
+    {% endif %}
+
+{% endif %}
+
+<div class="user-profile-container">
+
+    <div class="user-profile-head">
+        <div class="head-left">
+            <img src="https://picsum.photos/seed/{{viewed_user.id}}/500" alt="{{viewed_user.username}}'s Profile Picture" title="{{viewed_user.username}}'s Profile Picture">
+            <strong>{{ viewed_user.username }}</strong>
+        </div>
+        <div class="head-right">
+            <table class="user-profile-info">
+                <tr>
+                    <td>{{ viewed_user.posts.all|length }}</td>
+                    <td>{{ viewed_user.profile.following.all|length }}</td>
+                    <td id="followers">{{ viewed_user.followers.all|length }}</td>
+                </tr>
+                <tr class="info-cols">
+                    <td>posts</td>
+                    <td>following</td>
+                    <td>followers</td>
+                </tr>
+            </table>
+            {% if request.user.is_authenticated %}
+                {% if request.user == viewed_user %}
+                    <a href="{% url 'follower-users-page' %}" class="followers-btn">Followers</a>
+                {% else %}
+                    {% if viewed_user in request.user.profile.following.all %}
+                        <button id="follow-btn" class="unfollow follow-btn" onclick="handle_following()">Unfollow</button>
+                    {% else %}
+                        <button id="follow-btn" class="follow follow-btn" onclick="handle_following()">Follow</button>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                <a href="{% url 'login-page' %}?next={% url 'user-profile-page' viewed_user.username %}" id="follow-btn" class="follow follow-btn">Follow</a>
+            {% endif %}
+        </div>
+    </div>
+    {% if request.user == viewed_user %}
+        {% include 'sidebar_left.html' %}
+    {% endif %}
+    <div class="user-profile-body">
+        {% for post in viewed_user.posts.all %}
+
+            <div class="minipost">
+                <a a href="{% url 'post-page' post.id %}">
+                <div class="minipost-body">
+                    <img src="//img.youtube.com/vi/{{post.video_link}}/0.jpg">
+                    {% if post.user == request.user %}
+                    <div class="edit-btn">
+                        <a href="{% url 'edit-post' post.id %}">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                </a>
+
+                <div class="minipost-footer">
+                    <p>{{ post.description|truncatechars:"18" }}</p>
+                </div>
+
+            </div>
+            
+        {% endfor %}
+    </div>
+
+</div>
+
+
+
+{% if request.user == viewed_user %}
+    {% include 'sidebar_right.html' %}
+{% endif %}
+
+{% endblock content %}
