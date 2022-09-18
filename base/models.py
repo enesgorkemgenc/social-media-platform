@@ -185,7 +185,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.content
-
-
-    class Meta:
-        ordering = [(models.Count("liked_users") - models.Count("disliked_users")), "-created_date"]

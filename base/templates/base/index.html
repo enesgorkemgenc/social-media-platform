@@ -292,7 +292,7 @@
             activate()
         }
 
-        stop_feed = false;
+        stop_feed = true;
 
         function make_false(){
             stop_feed = false;
@@ -309,7 +309,7 @@
                 }
                 postSocket.send(Array(message));
                 stop_feed = true;
-                setTimeout(make_false,5000);  
+                setTimeout(make_false,3000);  
                 }
                       
             }
@@ -343,7 +343,7 @@
         }}
 
         document.addEventListener("DOMContentLoaded",activate())
-
+        setTimeout(make_false,3000);
     </script>
     {% endif %}
     
