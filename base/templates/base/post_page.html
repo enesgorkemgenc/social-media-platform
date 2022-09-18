@@ -89,6 +89,7 @@
                         <i class="fa-solid fa-heart-crack dislike-button {% if request.user in comment.disliked_users.all %}disliked{% endif %}" id="c-dislike-btn-{{ comment.id }}" onclick='dislike(`{% url "dislike-comment" comment.id %}`,"c","{{comment.id}}")'></i>
         
                     </div>
+                    <small>{{comment.created_date|timesince}} ago</small>
                     {% if request.user == comment.user %}
                     <div class="delete-section footer-section" onclick="delete_comment(`{% url 'delete-comment' comment.id %}`, '{{comment.id}}')">
                         <p><i class="fa-solid fa-trash-can"></i></p>

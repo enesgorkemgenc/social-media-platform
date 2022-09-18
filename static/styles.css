@@ -260,7 +260,7 @@ i.fa-bars{
 .delete-section{
   width: 8%;
   margin: auto 4px;
-  margin-left: 60%;
+  margin-left: 43%;
 }
 
 .post-footer .share-section{
@@ -524,6 +524,13 @@ strong{
 .post-comment-footer{
   display: flex;
   margin: 6px 0;
+}
+.post-comment-footer .likes-section{
+  width: 25%;
+}
+.post-comment-footer small{
+  padding-top: 1%;
+  width: 50%;
 }
 
 .comment-on-post-container{
