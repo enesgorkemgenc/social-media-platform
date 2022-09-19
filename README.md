@@ -141,7 +141,7 @@ When clicked, the video link gets copied to clipboard and share button's backgro
 
 _Users You May Know_ section consists of the users that the user's followed users follow.
 
-The more followed users of the user is following a user , the higher that user is going to be shown in the _Users You May Know_ section.
+The more followed users of the user are following a user , the higher that user is going to be shown in the _Users You May Know_ section.
 
 ***
 
