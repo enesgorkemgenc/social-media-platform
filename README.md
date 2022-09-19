@@ -5,7 +5,7 @@ Every action on the website is live and does not require to redirect the user.
 
 *This is made with AJAX requests.*
 
-## User actions
+## User Actions
 
 ### Register
 Registration form of the website
